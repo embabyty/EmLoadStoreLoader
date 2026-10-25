@@ -1,0 +1,46 @@
+name: Build IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  ipa:
+    name: Build EmLoadStoreCompanion IPA
+    runs-on: macos-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build unsigned iOS app
+        run: |
+          xcodebuild \
+            -project EmLoadStore.xcodeproj \
+            -target EmLoadStoreCompanion \
+            -configuration Release \
+            -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            SYMROOT="${{ github.workspace }}/build" \
+            build
+
+      - name: Package IPA
+        run: |
+          set -euo pipefail
+          app="${{ github.workspace }}/build/Release-iphoneos/EmLoadStoreCompanion.app"
+          test -d "$app"
+          stage="$(mktemp -d)"
+          mkdir -p "$stage/Payload"
+          cp -R "$app" "$stage/Payload/"
+          mkdir -p "${{ github.workspace }}/artifacts"
+          ditto -c -k --keepParent "$stage/Payload" "${{ github.workspace }}/artifacts/EmLoadStoreCompanion.ipa"
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: EmLoadStoreCompanion-ipa
+          path: artifacts/EmLoadStoreCompanion.ipa
+          if-no-files-found: error
