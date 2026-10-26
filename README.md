@@ -46,15 +46,18 @@ The iOS build command targets iPhone/iPad devices; it does not launch or build f
 
 ## EmLoadServer pairing
 
-On an Intel Mac, install `idevicepair` using [libimobiledevice](https://libimobiledevice.org/). With the iPhone connected by USB and unlocked, approve its Trust prompt, then build the host:
+On an Intel Mac, build [libimobiledevice](https://libimobiledevice.org/) and `ideviceinstaller` from source. The script needs the Xcode command line tools and Python 3 (used for a local CMake install); it does not use Homebrew or sudo, and it can be re-run safely:
 
 ```sh
-brew install libimobiledevice
+scripts/install-libimobiledevice.sh
+export PATH="$HOME/.local/bin:$PATH"
 cd EmLoadServer
 swift build -c release
 ```
 
-Build on the Intel Mac itself to produce an Intel-compatible executable.
+The script installs everything into `~/.local/opt/libimobiledevice` and links `idevicepair`, `idevice_id`, `ideviceinfo`, and `ideviceinstaller` into `~/.local/bin`. Add the `export PATH` line to `~/.zprofile` so future shells find them. Build on the Intel Mac itself to produce an Intel-compatible executable.
+
+With the iPhone connected by USB and unlocked, approve its Trust prompt.
 
 Sign in to Apple from this host (never from the iPhone app) with the commands above. The host's Keychain is the only place the account session and Anisette identity are persisted; no local Anisette HTTP service is exposed.
 
